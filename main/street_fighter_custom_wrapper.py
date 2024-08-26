@@ -67,25 +67,30 @@ class StreetFighterCustomWrapper(gym.Wrapper):
 
         return np.stack([self.frame_stack[i * 3 + 2][:, :, i] for i in range(3)], axis=-1)
 
-    def step(self, action):
-        custom_done = False
-        custom_reward = 0        
-
-        fighter = Fighter(self.prev_info)
+    def best_move(self, info):
+        fighter = Fighter(info)
+        sequence = None
         
-        if fighter.is_enemy_jumping and fighter.distance > 100:
+        if fighter.is_enemy_jumping and fighter.distance > 90:
             sequence = fighter.shoryuken_sequence(Punch.HP)
-        elif fighter.distance > 145:
+        elif fighter.is_enemy_standing and fighter.distance > 145:
             sequence = fighter.hadouken_sequence(Punch.HP)
         else:
-            if fighter.distance < 30:
-                sequence = fighter.throw_sequence()
+            if not fighter.is_enemy_jumping and fighter.is_enemy_stun:
+                sequence = fighter.hadouken_sequence(Punch.HP)
             else:
-                if fighter.is_enemy_stun:
-                    sequence = fighter.hadouken_sequence(Punch.HP)
+                if fighter.distance < 45:
+                    sequence = fighter.attack(Punch.HP)
                 else:
                     sequence = fighter.defense_sequence()
-           
+        return sequence
+        
+    def step(self, action):
+        custom_done = False
+        custom_reward = 0
+
+        sequence = self.best_move(self.prev_info)
+                  
         for move in sequence:
             for _ in range(self.num_step_frames):  # 保持每個按鍵組合一定的幀數
                 obs, _reward, _done, info = self.env.step(move)
@@ -93,6 +98,16 @@ class StreetFighterCustomWrapper(gym.Wrapper):
                 if self.rendering:
                     self.env.render()
                     time.sleep(0.01)
+                
+                # # 更新信息，並再次調用 best_move 以獲取最新的動作序列
+                # self.prev_info = info  # 更新 prev_info 為最新的 info
+                # new_sequence = self.best_move(info)
+                
+                # # 使用 np.any() 或 np.all() 來比較數組
+                # if not np.array_equal(new_sequence, sequence) and np.any(new_sequence):
+                #     # 如果新的動作序列與當前序列不同，更新為新序列
+                #     sequence = new_sequence
+                #     break  # 退出內部循環以重新評估序列
                     
         # obs, _reward, _done, info = self.env.step(action)
         # self.frame_stack.append(obs[::2, ::2, :])

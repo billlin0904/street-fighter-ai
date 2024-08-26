@@ -2,9 +2,9 @@ import numpy as np
 from enum import Enum
 
 class Punch(Enum):
-    LP = 9
+    HP = 9
     MP = 10
-    HP = 11
+    LP = 11
     
 class Kick(Enum):
     LK = 0
@@ -34,14 +34,20 @@ class Status(Enum):
 class Fighter:
     def __init__(self, info):
         if info != None:
-            agent_x = info.get('agent_x', 0)
-            enemy_x = info.get('enemy_x', 0)
-            is_facing_right = agent_x < enemy_x  
+            self.agent_x = info.get('agent_x', 0)
+            self.enemy_x = info.get('enemy_x', 0)
+            self.agent_y = info.get('agent_y', 0)
+            self.enemy_y = info.get('enemy_y', 0)
+            is_facing_right = self.agent_x < self.enemy_x  
             self.is_facing_right = is_facing_right
-            self._distance = abs(enemy_x - agent_x)
+            self._distance = abs(self.enemy_x - self.agent_x)
             self.agent_status = info.get('agent_status', 0)
             self.enemy_status = info.get('enemy_status', 0)
         else:
+            self.agent_x = 0
+            self.enemy_x = 0
+            self.agent_y = 0
+            self.enemy_y = 0
             self.is_facing_right = True
             self._distance = 145
             self.agent_status = Status.STANDING.value
@@ -57,39 +63,32 @@ class Fighter:
     
     @property
     def is_enemy_jumping(self):
-        return self.enemy_status == Status.JUMPING.value
+        return self.enemy_y > 105 and self.enemy_y < 130
+        #return self.enemy_status == Status.JUMPING.value
     
     @property
     def is_enemy_standing(self):
-        return self.enemy_status == Status.STANDING.value
+        return self.enemy_status != Status.THROWN.value
     
     @property
     def is_enemy_stun(self):
         return self.enemy_status == Status.HIT_STUN.value
-    
-    def throw_sequence(self):
-        """
-        返回執行擲投的按鍵序列。
-        擲投需要站在非常接近對手的位置並按下搖桿方向加上重拳。
-        """
+
+    def attack(self, punch):
         sequence = []
         action = np.array([0] * 12)
-
+                          
         if self.is_facing_right:
-            # 面向右邊時的擲投：→ + HP
-            action[7] = 1  # 按下 → (RIGHT)
+            action[7] = 1
+            
         else:
-            # 面向左邊時的擲投：← + HP
-            action[6] = 1  # 按下 ← (LEFT)
-
-        action[Punch.LP.value] = 1  # 按下重拳 (Hard Punch)
+            action[6] = 1
         sequence.append(action.copy())
-
-        # 調試輸出
-        print(f"擲投動作: {action}")
-
+        
+        action[punch.value] = 1
+        sequence.append(action.copy())
+        
         return sequence
-
 
     def hadouken_sequence(self, punch):
         """

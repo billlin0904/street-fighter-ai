@@ -4,8 +4,8 @@ from stable_baselines3.common.monitor import Monitor
 import retro
 
 game = "StreetFighterIISpecialChampionEdition-Genesis"
-#state = "Champion.Level12.RyuVsBison"
-state = "ken"
+state = "Champion.Level12.RyuVsBison"
+#state = "VsKen"
 
 def make_env(game, state, seed=0):
     def _init():
