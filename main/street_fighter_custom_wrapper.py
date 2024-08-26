@@ -17,11 +17,9 @@ import collections
 import gym
 import numpy as np
 
-from move_list import make_hadouken_sequence,\
-make_shoryuken_sequence,\
-make_defense_sequence, \
-make_hurricane_kick_sequence, \
-make_jump_kick_punch_shoryuken_sequence
+from fighter import Punch, \
+    Kick, \
+    Fighter
 
 # Custom environment wrapper
 class StreetFighterCustomWrapper(gym.Wrapper):
@@ -73,41 +71,20 @@ class StreetFighterCustomWrapper(gym.Wrapper):
         custom_done = False
         custom_reward = 0        
 
-        is_facing_right = True
-        is_jump = False
-        is_long_distance = True
-        is_move_end = True
-        distance = 100
+        fighter = Fighter(self.prev_info)
         
-        if self.prev_info != None:
-            # 從 info 字典中獲取角色和對手的 x 坐標
-            agent_x = self.prev_info.get('agent_x', 0)
-            enemy_x = self.prev_info.get('enemy_x', 0)
-            # 判斷角色是否面向右邊
-            is_facing_right = agent_x < enemy_x  
-            
-            agent_y = self.prev_info.get('agent_y', 0)                
-            enemy_y = self.prev_info.get('enemy_y', 0)
-            distance = abs(enemy_x - agent_x)
-            is_long_distance = distance > 145
-            print(f"distance: {distance}")
-            is_move_end = agent_y == 192
-            is_jump = enemy_y != 192
-            
-        if not is_move_end:
-            sequence = make_defense_sequence(is_facing_right)
+        if fighter.is_enemy_jumping and fighter.distance > 100:
+            sequence = fighter.shoryuken_sequence(Punch.HP)
+        elif fighter.distance > 145:
+            sequence = fighter.hadouken_sequence(Punch.HP)
         else:
-            if is_jump:
-                sequence = make_shoryuken_sequence(is_facing_right)
-            elif is_long_distance:
-                sequence = make_hadouken_sequence(is_facing_right)
+            if fighter.distance < 30:
+                sequence = fighter.throw_sequence()
             else:
-                if distance <= 97:
-                    sequence = make_jump_kick_punch_shoryuken_sequence(is_facing_right)
+                if fighter.is_enemy_stun:
+                    sequence = fighter.hadouken_sequence(Punch.HP)
                 else:
-                    sequence = make_defense_sequence(is_facing_right)
-                # sequence = make_hurricane_kick_sequence(is_facing_right)
-                # sequence = make_defense_sequence(is_facing_right)
+                    sequence = fighter.defense_sequence()
            
         for move in sequence:
             for _ in range(self.num_step_frames):  # 保持每個按鍵組合一定的幀數

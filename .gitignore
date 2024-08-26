@@ -14,12 +14,6 @@ images/
 # Recorded videos
 /main/recordings/
 
-# Main scripts
-/main/*.py
-!/main/test.py
-!/main/train.py
-!/main/street_fighter_custom_wrapper.py
-
 # Game Data
 /data/*
 !/data/Champion.Level12.RyuVsBison.state

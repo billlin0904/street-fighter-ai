@@ -47,8 +47,8 @@ def make_env(game, state, seed=0):
             use_restricted_actions=retro.Actions.FILTERED, 
             obs_type=retro.Observations.IMAGE    
         )
-        print(env.buttons)
-        print(env.action_space)
+        #print(env.buttons)
+        #print(env.action_space)
         env = StreetFighterCustomWrapper(env, rendering=True)
         env = Monitor(env)
         env.seed(seed)
