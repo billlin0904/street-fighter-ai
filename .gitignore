@@ -1,0 +1,37 @@
+*.zip
+**/__pycache__/
+*.pyc
+
+archives/
+images/
+/main/logs/monitoring/
+
+# Mac system files
+/007*
+*.DS_Store
+.DS_Store
+
+# Recorded videos
+/main/recordings/
+
+# Main scripts
+/main/*.py
+!/main/test.py
+!/main/train.py
+!/main/street_fighter_custom_wrapper.py
+
+# Game Data
+/data/*
+!/data/Champion.Level12.RyuVsBison.state
+!/data/data.json
+!/data/metadata.json
+!/data/scenario.json
+!/data/Gym Retro Integration.exe
+
+
+# Model Files
+/main/trained_models/*
+!/main/trained_models/ppo_ryu_2000000_steps_updated.*
+!/main/trained_models/ppo_ryu_2500000_steps_updated.*
+!/main/trained_models/ppo_ryu_3000000_steps_updated.*
+!/main/trained_models/ppo_ryu_7000000_steps_updated.*
