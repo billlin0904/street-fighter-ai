@@ -80,7 +80,7 @@ class StreetFighterCustomWrapper(gym.Wrapper):
                 self.frame_stack.append(obs[::2, ::2, :])
                 if self.rendering:
                     self.env.render()
-                    time.sleep(0.01)
+                    time.sleep(1.0 / 60.0)
                     
         self.prev_info = info
                     
@@ -103,7 +103,7 @@ class StreetFighterCustomWrapper(gym.Wrapper):
         self.total_timesteps += self.num_step_frames
 
         if curr_player_health < 0:
-            ustom_reward = -math.pow(self.full_hp, (curr_oppont_health + 1) / (self.full_hp + 1))
+            custom_reward = -math.pow(self.full_hp, (curr_oppont_health + 1) / (self.full_hp + 1))
             custom_done = True
         elif curr_oppont_health < 0:
             custom_reward = math.pow(self.full_hp, (curr_player_health + 1) / (self.full_hp + 1)) * self.reward_coeff

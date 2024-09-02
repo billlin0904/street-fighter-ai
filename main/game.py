@@ -2,10 +2,12 @@
 from street_fighter_custom_wrapper import StreetFighterCustomWrapper
 from stable_baselines3.common.monitor import Monitor
 import retro
+import pyaudio
+import time
 import matplotlib.pyplot as plt
 
 game = "StreetFighterIISpecialChampionEdition-Genesis"
-#state = "Champion.Level12.RyuVsBison"
+state = "Champion.Level12.RyuVsBison"
 state = "VsKen"
 #state = "VsChunli"
 #state = "VsRyu"
@@ -35,25 +37,44 @@ env = env_fn()
 observation = env.reset()
 done = False
 
-screen_height, screen_width, _ = observation.shape
-print(f"Screen size: {screen_width} x {screen_height}")
+def get_time():
+    return time.time()
 
-# plt.imshow(observation)
-# plt.title("Game Screen")
-# plt.show()
+frame_time = 1.0 / 60.0
+p = pyaudio.PyAudio()
+audio_rate = env.em.get_audio_rate()
+stream = p.open(format = pyaudio.paInt16,
+                channels=2,
+                rate=int(audio_rate),
+                output=True)
+
+last_time = get_time()
 
 # 無窮迴圈直到關閉視窗
 try:
     while True:
         action = env.action_space.sample()  # 使用隨機動作
-        observation, reward, done, info = env.step(action)
-        env.render()  # 渲染遊戲畫面
+        observation, reward, done, info = env.step(action)        
 
         if done:
-            observation = env.reset()  # 如果遊戲結束，重置環境重新開始
+            observation = env.reset()  # 如果遊戲結束，重置環境重新開始            
 
+        current_time = get_time()
+        time_diff = current_time - last_time
+        if time_diff < frame_time:
+           time.sleep(frame_time - time_diff)
+        last_time = current_time
+        
+        env.render()  # 渲染遊戲畫面
+        
+        # play audio sample for this frame
+        #sound = bytes(env.em.get_audio())
+        #stream.write(frames=sound)
 except KeyboardInterrupt:
     # 捕捉 Ctrl+C 信號以平滑關閉
     print("遊戲已停止。")
 finally:
+    # close audio stream
+    stream.close()
+    p.terminate()
     env.close()  # 確保在關閉時釋放資源

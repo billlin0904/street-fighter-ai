@@ -62,11 +62,10 @@ class Fighter:
     def get_best_move(self):
         sequence = None
         
-        print(f"Distance: {self.distance}")
+        #print(f"Distance: {self.distance}")
         
-        if self.is_enemy_jumping and (self.distance >= 90 and self.distance <= 105):
+        if self.is_enemy_jumping and (self.distance >= 100 and self.distance <= 105):
             sequence = self.shoryuken_sequence(Punch.HP)
-            #sequence = self.diagonal_jump_kick_sequence()
         elif self.distance >= 150 and not self.is_enemy_stun:
             sequence = self.hadouken_sequence(Punch.MP)
         elif self.is_enemy_standing and self.distance < 40:
