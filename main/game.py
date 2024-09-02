@@ -2,10 +2,13 @@
 from street_fighter_custom_wrapper import StreetFighterCustomWrapper
 from stable_baselines3.common.monitor import Monitor
 import retro
+import matplotlib.pyplot as plt
 
 game = "StreetFighterIISpecialChampionEdition-Genesis"
-state = "Champion.Level12.RyuVsBison"
-#state = "VsKen"
+#state = "Champion.Level12.RyuVsBison"
+state = "VsKen"
+#state = "VsChunli"
+#state = "VsRyu"
 
 def make_env(game, state, seed=0):
     def _init():
@@ -31,6 +34,13 @@ env = env_fn()
 # 測試環境
 observation = env.reset()
 done = False
+
+screen_height, screen_width, _ = observation.shape
+print(f"Screen size: {screen_width} x {screen_height}")
+
+# plt.imshow(observation)
+# plt.title("Game Screen")
+# plt.show()
 
 # 無窮迴圈直到關閉視窗
 try:

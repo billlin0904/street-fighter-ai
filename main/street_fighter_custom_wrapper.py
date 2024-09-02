@@ -17,9 +17,7 @@ import collections
 import gym
 import numpy as np
 
-from fighter import Punch, \
-    Kick, \
-    Fighter
+from fighter import Fighter
 
 # Custom environment wrapper
 class StreetFighterCustomWrapper(gym.Wrapper):
@@ -52,6 +50,8 @@ class StreetFighterCustomWrapper(gym.Wrapper):
         return np.stack([self.frame_stack[i * 3 + 2][:, :, i] for i in range(3)], axis=-1)
 
     def reset(self):
+        print("Reset game")
+        
         observation = self.env.reset()
         
         self.prev_player_health = self.full_hp
@@ -66,48 +66,23 @@ class StreetFighterCustomWrapper(gym.Wrapper):
             self.frame_stack.append(observation[::2, ::2, :])
 
         return np.stack([self.frame_stack[i * 3 + 2][:, :, i] for i in range(3)], axis=-1)
-
-    def best_move(self, info):
-        fighter = Fighter(info)
-        sequence = None
-        
-        if fighter.is_enemy_jumping and fighter.distance > 90:
-            sequence = fighter.shoryuken_sequence(Punch.HP)
-        elif fighter.is_enemy_standing and fighter.distance > 145:
-            sequence = fighter.hadouken_sequence(Punch.HP)
-        else:
-            if not fighter.is_enemy_jumping and fighter.is_enemy_stun:
-                sequence = fighter.hadouken_sequence(Punch.HP)
-            else:
-                if fighter.distance < 45:
-                    sequence = fighter.attack(Punch.HP)
-                else:
-                    sequence = fighter.defense_sequence()
-        return sequence
         
     def step(self, action):
         custom_done = False
         custom_reward = 0
-
-        sequence = self.best_move(self.prev_info)
-                  
+        
+        fighter = Fighter(self.prev_info)
+        sequence = fighter.get_best_move()
+        
         for move in sequence:
-            for _ in range(self.num_step_frames):  # 保持每個按鍵組合一定的幀數
+            for _ in range(self.num_step_frames):
                 obs, _reward, _done, info = self.env.step(move)
                 self.frame_stack.append(obs[::2, ::2, :])
                 if self.rendering:
                     self.env.render()
                     time.sleep(0.01)
-                
-                # # 更新信息，並再次調用 best_move 以獲取最新的動作序列
-                # self.prev_info = info  # 更新 prev_info 為最新的 info
-                # new_sequence = self.best_move(info)
-                
-                # # 使用 np.any() 或 np.all() 來比較數組
-                # if not np.array_equal(new_sequence, sequence) and np.any(new_sequence):
-                #     # 如果新的動作序列與當前序列不同，更新為新序列
-                #     sequence = new_sequence
-                #     break  # 退出內部循環以重新評估序列
+                    
+        self.prev_info = info
                     
         # obs, _reward, _done, info = self.env.step(action)
         # self.frame_stack.append(obs[::2, ::2, :])
@@ -122,26 +97,6 @@ class StreetFighterCustomWrapper(gym.Wrapper):
         #         time.sleep(0.01)                    
                 
         self.prev_info = info
-
-        # if np.array_equal(action, special_move_action):
-        #     for _ in range(self.num_step_frames):
-        #         obs, _reward, _done, info = self.env.step(special_move_action)
-        #         self.frame_stack.append(obs[::2, ::2, :])
-        #         if self.rendering:
-        #             self.env.render()
-        #             time.sleep(0.01)
-        # else:
-        #     obs, _reward, _done, info = self.env.step(action)
-        #     self.frame_stack.append(obs[::2, ::2, :])
-        #     if self.rendering:
-        #         self.env.render()
-        #         time.sleep(0.01)
-        #     for _ in range(self.num_step_frames - 1):
-        #         obs, _reward, _done, info = self.env.step(action)
-        #         self.frame_stack.append(obs[::2, ::2, :])
-        #         if self.rendering:
-        #             self.env.render()
-        #             time.sleep(0.01)
 
         curr_player_health = info['agent_hp']
         curr_oppont_health = info['enemy_hp']
